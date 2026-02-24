@@ -103,7 +103,7 @@ func (v *Vault) Name() string {
 }
 
 func (v *Vault) Priority() int {
-	return 696
+	return trace.Get().Priority() - 1
 }
 
 func (v *Vault) Init() error {

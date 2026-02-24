@@ -22,8 +22,9 @@ func init() {
 	os.Setenv("DATASOURCE_USERNAME", "root")
 	os.Setenv("DATASOURCE_PASSWORD", "123456")
 	os.Setenv("DATASOURCE_DEBUG", "true")
-	err := ioc.ConfigIocObject(ioc.NewLoadConfigRequest())
-	if err != nil {
+	// 仅加载配置，不执行 Init（避免依赖真实数据库和 Vault 连接）
+	req := ioc.NewLoadConfigRequest()
+	if err := ioc.DefaultStore.LoadConfig(req); err != nil {
 		panic(err)
 	}
 }
