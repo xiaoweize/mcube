@@ -19,7 +19,7 @@ func init() {
 }
 
 var defaultConfig = &Vault{
-	Address:       "http://127.0.0.1:8200",
+	Address:       "",
 	Timeout:       30,
 	AuthMethod:    "token",
 	K8sTokenPath:  "/var/run/secrets/kubernetes.io/serviceaccount/token",
@@ -108,6 +108,12 @@ func (v *Vault) Priority() int {
 
 func (v *Vault) Init() error {
 	v.log = log.Sub(v.Name())
+
+	if v.Address == "" {
+		v.log.Warn().Msg("vault address is empty, skipping initialization")
+		return nil
+	}
+
 	v.stopRenewal = make(chan struct{})
 
 	// 0. 验证挂载点配置
