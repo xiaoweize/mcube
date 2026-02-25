@@ -102,10 +102,13 @@ Vault 路径结构 = 挂载点 + 秘密路径
 **CLI vs API 使用对比**：
 
 ```bash
-# Vault CLI 自动识别挂载点
-vault kv get secret/myapp/config
-             └──┬──┘└────┬────┘
-             挂载点   秘密路径
+# Vault CLI（通过容器执行）自动识别挂载点
+docker exec \
+  -e VAULT_ADDR='http://127.0.0.1:8200' \
+  -e VAULT_TOKEN='myroot' \
+  vault vault kv get secret/myapp/config
+#                        └──┬──┘└────┬────┘
+#                        挂载点   秘密路径
 ```
 
 ```go
@@ -125,7 +128,10 @@ vault.ReadSecret(ctx, "myapp/config")  // 自动使用配置的挂载点
 
 **查看 Vault 挂载点**：
 ```bash
-vault secrets list
+docker exec \
+  -e VAULT_ADDR='http://127.0.0.1:8200' \
+  -e VAULT_TOKEN='myroot' \
+  vault vault secrets list
 # 输出：
 # Path          Type         
 # ----          ----         
@@ -440,18 +446,32 @@ secret_id = "your-secret-id"
 
 ```bash
 # 启用 AppRole 认证
-vault auth enable approle
+docker exec \
+  -e VAULT_ADDR='http://127.0.0.1:8200' \
+  -e VAULT_TOKEN='myroot' \
+  vault vault auth enable approle
 
 # 创建角色和策略
-vault write auth/approle/role/myapp \
-  secret_id_ttl=10m \
-  token_ttl=20m \
-  token_max_ttl=30m \
-  policies="myapp-policy"
+docker exec \
+  -e VAULT_ADDR='http://127.0.0.1:8200' \
+  -e VAULT_TOKEN='myroot' \
+  vault vault write auth/approle/role/myapp \
+    secret_id_ttl=10m \
+    token_ttl=20m \
+    token_max_ttl=30m \
+    policies="myapp-policy"
 
-# 获取凭证
-vault read auth/approle/role/myapp/role-id
-vault write -f auth/approle/role/myapp/secret-id
+# 获取 Role ID
+docker exec \
+  -e VAULT_ADDR='http://127.0.0.1:8200' \
+  -e VAULT_TOKEN='myroot' \
+  vault vault read auth/approle/role/myapp/role-id
+
+# 获取 Secret ID
+docker exec \
+  -e VAULT_ADDR='http://127.0.0.1:8200' \
+  -e VAULT_TOKEN='myroot' \
+  vault vault write -f auth/approle/role/myapp/secret-id
 ```
 
 ### Kubernetes 认证
@@ -469,20 +489,29 @@ k8s_token_path = "/var/run/secrets/kubernetes.io/serviceaccount/token"
 
 ```bash
 # 启用 Kubernetes 认证
-vault auth enable kubernetes
+docker exec \
+  -e VAULT_ADDR='http://127.0.0.1:8200' \
+  -e VAULT_TOKEN='myroot' \
+  vault vault auth enable kubernetes
 
 # 配置 Kubernetes 认证后端
-vault write auth/kubernetes/config \
-  kubernetes_host="https://kubernetes.default.svc:443" \
-  kubernetes_ca_cert=@/var/run/secrets/kubernetes.io/serviceaccount/ca.crt \
-  token_reviewer_jwt=@/var/run/secrets/kubernetes.io/serviceaccount/token
+docker exec \
+  -e VAULT_ADDR='http://127.0.0.1:8200' \
+  -e VAULT_TOKEN='myroot' \
+  vault vault write auth/kubernetes/config \
+    kubernetes_host="https://kubernetes.default.svc:443" \
+    kubernetes_ca_cert=@/var/run/secrets/kubernetes.io/serviceaccount/ca.crt \
+    token_reviewer_jwt=@/var/run/secrets/kubernetes.io/serviceaccount/token
 
 # 创建角色绑定到 ServiceAccount
-vault write auth/kubernetes/role/myapp \
-  bound_service_account_names=myapp \
-  bound_service_account_namespaces=default \
-  policies=myapp-policy \
-  ttl=24h
+docker exec \
+  -e VAULT_ADDR='http://127.0.0.1:8200' \
+  -e VAULT_TOKEN='myroot' \
+  vault vault write auth/kubernetes/role/myapp \
+    bound_service_account_names=myapp \
+    bound_service_account_namespaces=default \
+    policies=myapp-policy \
+    ttl=24h
 ```
 
 ### TLS 配置
@@ -817,7 +846,10 @@ auto_renew = true
 检查网络连接和 Vault 服务状态：
 
 ```bash
-vault status
+docker exec \
+  -e VAULT_ADDR='http://127.0.0.1:8200' \
+  -e VAULT_TOKEN='myroot' \
+  vault vault status
 ```
 
 验证 TLS 配置是否正确。
@@ -828,10 +860,16 @@ vault status
 
 ```bash
 # 查看当前 token 的策略
-vault token lookup
+docker exec \
+  -e VAULT_ADDR='http://127.0.0.1:8200' \
+  -e VAULT_TOKEN='myroot' \
+  vault vault token lookup
 
 # 查看策略内容
-vault policy read myapp-policy
+docker exec \
+  -e VAULT_ADDR='http://127.0.0.1:8200' \
+  -e VAULT_TOKEN='myroot' \
+  vault vault policy read myapp-policy
 ```
 
 确保策略包含必要的权限：

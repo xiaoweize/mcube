@@ -9,6 +9,13 @@ import (
 	"github.com/rs/zerolog"
 )
 
+type CREDENTIAL_MODE string
+
+const (
+	CREDENTIAL_MODE_STATIC       CREDENTIAL_MODE = "static"       // 静态凭证（配置文件）
+	CREDENTIAL_MODE_VAULT_SECRET CREDENTIAL_MODE = "vault-secret" // Vault KV 静态凭证
+)
+
 func NewRabbitConn(conf RabbitConnConfig) (*RabbitConn, error) {
 	rc := &RabbitConn{
 		conf: conf,
@@ -36,6 +43,13 @@ type RabbitConnConfig struct {
 	MaxReconnectAttempts int `toml:"max_reconnect_attempts" json:"max_reconnect_attempts" yaml:"max_reconnect_attempts"  env:"MAX_RECONNECT_ATTEMPTS"`
 	// 开启链路追踪
 	Trace bool `toml:"trace" json:"trace" yaml:"trace"  env:"TRACE"`
+
+	// Vault 凭证配置
+	CredentialMode CREDENTIAL_MODE `json:"credential_mode" yaml:"credential_mode" toml:"credential_mode" env:"CREDENTIAL_MODE"`
+	// VaultPath Vault KV 路径
+	VaultPath string `json:"vault_path" yaml:"vault_path" toml:"vault_path" env:"VAULT_PATH"`
+	// VaultURLField Vault 返回数据中的连接 URL 字段名，默认 "url"
+	VaultURLField string `json:"vault_url_field" yaml:"vault_url_field" toml:"vault_url_field" env:"VAULT_URL_FIELD"`
 }
 
 type RabbitConn struct {
